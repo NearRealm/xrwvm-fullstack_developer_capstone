@@ -1,19 +1,19 @@
 # Uncomment the required imports before adding the code
 
-# from django.shortcuts import render
-# from django.http import HttpResponseRedirect, HttpResponse
-# from django.contrib.auth.models import User
-# from django.shortcuts import get_object_or_404, render, redirect
-# from django.contrib.auth import logout
-# from django.contrib import messages
-# from datetime import datetime
+from django.shortcuts import render
+from django.http import HttpResponseRedirect, HttpResponse
+from django.contrib.auth.models import User
+from django.shortcuts import get_object_or_404, render, redirect
+from django.contrib.auth import logout
+from django.contrib import messages
+from datetime import datetime
 
 from django.http import JsonResponse
 from django.contrib.auth import login, authenticate
 import logging
 import json
 from django.views.decorators.csrf import csrf_exempt
-# from .populate import initiate
+from .populate import initiate
 
 
 # Get an instance of a logger
@@ -39,14 +39,55 @@ def login_user(request):
     return JsonResponse(data)
 
 # Create a `logout_request` view to handle sign out request
-# def logout_request(request):
-# ...
+
+def logout_request(request):
+    # This is the core of the logout functionality
+    logout(request)
+    # Prepare a JSON response to send back to the frontend
+    data = {"userName": ""}
+    return JsonResponse(data)
 
 # Create a `registration` view to handle sign up request
-# @csrf_exempt
-# def registration(request):
-# ...
 
+@csrf_exempt
+def registration(request):
+    # Load JSON data from the request body
+    data = json.loads(request.body)
+    username = data.get('userName')
+    password = data.get('password')
+    first_name = data.get('firstName')
+    last_name = data.get('lastName')
+    email = data.get('email')
+
+    # Basic validation to ensure required fields are present
+    if not all([username, password, first_name, last_name, email]):
+        return JsonResponse({"error": "Missing required fields"}, status=400)
+
+    try:
+        # Check if a user with the same username already exists.
+        User.objects.get(username=username)
+        # If the line above does not cause an error, it means the user exists.
+        # So, we return an error message.
+        return JsonResponse({"error": "Username already registered"}, status=400)
+
+    except User.DoesNotExist:
+        # This is the "good" path. The username is available.
+        logger.info(f"Creating a new user: {username}")
+        
+        # Create the new user in the database
+        user = User.objects.create_user(
+            username=username, 
+            first_name=first_name, 
+            last_name=last_name, 
+            password=password, 
+            email=email
+        )
+        
+        # Log the user in immediately after successful registration
+        login(request, user)
+        
+        # Return a success response
+        return JsonResponse({"userName": username, "status": "Authenticated"})
 # # Update the `get_dealerships` view to render the index page with
 # a list of dealerships
 # def get_dealerships(request):
