@@ -58,18 +58,51 @@ app.get('/fetchReviews/dealer/:id', async (req, res) => {
 
 // Express route to fetch all dealerships
 app.get('/fetchDealers', async (req, res) => {
-//Write your code here
-});
+    try {
+      // Use the Dealerships model to find all documents
+      const documents = await Dealerships.find();
+      // Return the found documents as a JSON response
+      res.json(documents);
+    } catch (error) {
+      // Handle any potential errors
+      res.status(500).json({ error: 'Error fetching dealerships' });
+    }
+  });
 
 // Express route to fetch Dealers by a particular state
 app.get('/fetchDealers/:state', async (req, res) => {
-//Write your code here
-});
+    try {
+      // Get the state from the URL parameters
+      const stateToFind = req.params.state;
+      // Create a filter to find documents where the 'state' field matches
+      const documents = await Dealerships.find({ state: stateToFind });
+      // Return the found documents as a JSON response
+      res.json(documents);
+    } catch (error) {
+      // Handle any potential errors
+      res.status(500).json({ error: 'Error fetching dealerships by state' });
+    }
+  });
 
 // Express route to fetch dealer by a particular id
 app.get('/fetchDealer/:id', async (req, res) => {
-//Write your code here
-});
+    try {
+      // Get the id from the URL parameters
+      const idToFind = req.params.id;
+      // Create a filter to find the document where the 'id' field matches
+      const document = await Dealerships.findOne({ id: idToFind });
+      if (document) {
+        // If a document is found, return it as JSON
+        res.json(document);
+      } else {
+        // If no document is found, return a 404 Not Found error
+        res.status(404).json({ error: 'Dealer not found' });
+      }
+    } catch (error) {
+      // Handle any other potential errors
+      res.status(500).json({ error: 'Error fetching dealer by id' });
+    }
+  });
 
 //Express route to insert review
 app.post('/insert_review', express.raw({ type: '*/*' }), async (req, res) => {
